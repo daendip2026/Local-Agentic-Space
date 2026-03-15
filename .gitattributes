@@ -1,15 +1,15 @@
-# 1. 
+# 1.
 * text=auto
 
-# 2. 
+# 2.
 *.rs   text
 *.cpp  text
 *.h    text
 *.toml text
 *.md   text
 
-# 3. 
+# 3.
 third_party/** linguist-vendored
 
-# 4. 
+# 4.
 docs/** linguist-documentation

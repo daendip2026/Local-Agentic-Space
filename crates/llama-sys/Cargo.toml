@@ -5,3 +5,8 @@ edition = "2024"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
+
+
+[build-dependencies]
+cmake = "0.1"
+bindgen = "0.72.1"

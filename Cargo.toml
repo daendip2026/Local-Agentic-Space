@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "crates/llama-sys",
+    "crates/agentic-ipc",
+    "crates/agentic-core"
+]
+resolver = "2"

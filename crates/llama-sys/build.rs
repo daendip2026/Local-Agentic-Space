@@ -5,7 +5,11 @@ fn main() {
     // 1. Path Management
     // Use CARGO_MANIFEST_DIR to anchor paths absolutely to avoid issues with relative path resolution
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
-    let llama_cpp_root = manifest_dir.join("..").join("..").join("third_party").join("llama.cpp");
+    let llama_cpp_root = manifest_dir
+        .join("..")
+        .join("..")
+        .join("third_party")
+        .join("llama.cpp");
 
     // Allow users to override the source directory via environment variable
     let llama_cpp_path = env::var("LLAMA_SOURCE_DIR")
@@ -23,10 +27,9 @@ fn main() {
     // Also watch for environment variable changes that might affect the build
     println!("cargo:rerun-if-env-changed=LLAMA_SOURCE_DIR");
 
-
     // 3. Configure and Build via CMake
     let mut config = cmake::Config::new(&llama_cpp_path);
-    
+
     config
         .define("LLAMA_STATIC", "ON")
         .define("LLAMA_BUILD_TESTS", "OFF")
@@ -51,9 +54,9 @@ fn main() {
     } else {
         println!("cargo:rustc-link-search=native={}", lib_dir.display());
     }
-    
+
     println!("cargo:rustc-link-lib=static=llama");
-    
+
     // Link appropriate C++ standard library based on OS
     if target.contains("apple") {
         println!("cargo:rustc-link-lib=dylib=c++");

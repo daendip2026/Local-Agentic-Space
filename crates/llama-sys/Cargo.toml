@@ -8,5 +8,5 @@ license = "MIT OR Apache-2.0"
 
 
 [build-dependencies]
-cmake = "0.1"
-bindgen = "0.72.1"
+cmake.workspace = true
+bindgen.workspace = true

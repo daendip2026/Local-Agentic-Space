@@ -5,3 +5,7 @@ edition = "2024"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
+llama-sys.workspace = true
+agentic-ipc.workspace = true
+
+tokio.workspace = true

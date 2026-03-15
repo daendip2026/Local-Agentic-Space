@@ -5,3 +5,12 @@ members = [
     "crates/agentic-core"
 ]
 resolver = "2"
+
+[workspace.dependencies]
+llama-sys = { path = "crates/llama-sys" }
+agentic-ipc = { path = "crates/agentic-ipc" }
+
+cmake = "0.1"
+bindgen = "0.72.1"
+zerocopy = "0.8.42"
+tokio = "1.50.0"

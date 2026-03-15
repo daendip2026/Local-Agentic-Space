@@ -23,8 +23,10 @@ jobs:
       with:
         components: clippy, rustfmt
 
-    # - name: Install Dependencies
-    #   run: sudo apt-get update && sudo apt-get install -y build-essential
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake libclang-dev
 
     - name: Cache Rust & C++ Build
       uses: actions/cache@v4

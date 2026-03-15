@@ -1,4 +1,5 @@
 use std::env;
+use std::fs;
 use std::path::PathBuf;
 
 fn main() {
@@ -31,10 +32,11 @@ fn main() {
     let mut config = cmake::Config::new(&llama_cpp_path);
 
     config
-        .define("LLAMA_STATIC", "ON")
+        .define("BUILD_SHARED_LIBS", "OFF")
         .define("LLAMA_BUILD_TESTS", "OFF")
         .define("LLAMA_BUILD_EXAMPLES", "OFF")
-        .define("LLAMA_BUILD_SERVER", "OFF");
+        .define("LLAMA_BUILD_SERVER", "OFF")
+        .define("GGML_STATIC", "ON");
 
     // Handle MSVC specific flags for exception handling
     let target = env::var("TARGET").unwrap();
@@ -46,16 +48,54 @@ fn main() {
     let dst = config.build();
 
     // 4. Linkage Configuration
-    // Experts handle cases where libraries might be in 'lib' or 'lib64'
-    let lib_dir = dst.join("lib");
-    let lib64_dir = dst.join("lib64");
-    if lib64_dir.exists() {
-        println!("cargo:rustc-link-search=native={}", lib64_dir.display());
-    } else {
-        println!("cargo:rustc-link-search=native={}", lib_dir.display());
+    // llama.cpp might place libraries in various subdirectories depending on the version and OS
+    let search_paths = vec![
+        dst.join("lib"),
+        dst.join("lib64"),
+        dst.join("build"),
+        dst.join("build").join("common"),
+    ];
+
+    let mut found_libs = Vec::new();
+
+    for path in &search_paths {
+        if path.exists() {
+            // Inform Cargo about the library search path
+            println!("cargo:rustc-link-search=native={}", path.display());
+
+            // Automatically discover and link all static libraries (.a or .lib)
+            if let Ok(entries) = fs::read_dir(path) {
+                for entry in entries.flatten() {
+                    let file_name = entry.file_name().to_string_lossy().to_string();
+
+                    // Logic for Linux/macOS (.a) and Windows (.lib)
+                    let lib_name = if file_name.starts_with("lib") && file_name.ends_with(".a") {
+                        Some(file_name.trim_start_matches("lib").trim_end_matches(".a"))
+                    } else if file_name.ends_with(".lib") {
+                        Some(file_name.trim_end_matches(".lib"))
+                    } else {
+                        None
+                    };
+
+                    if let Some(name) = lib_name {
+                        // Skip auxiliary libraries that are not core to llama.cpp
+                        if !name.contains("test") && !name.contains("example") {
+                            println!("cargo:rustc-link-lib=static={}", name);
+                            found_libs.push(name.to_string());
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    println!("cargo:rustc-link-lib=static=llama");
+    // Fallback: Ensure core libraries are linked if discovery failed
+    if !found_libs.iter().any(|l| l == "llama") {
+        println!("cargo:rustc-link-lib=static=llama");
+    }
+    if !found_libs.iter().any(|l| l == "ggml") {
+        println!("cargo:rustc-link-lib=static=ggml");
+    }
 
     // Link appropriate C++ standard library based on OS
     if target.contains("apple") {

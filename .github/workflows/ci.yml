@@ -31,13 +31,6 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        include:
-          - os: ubuntu-latest
-            install_deps: |
-              sudo apt-get update
-              sudo apt-get install -y build-essential cmake libclang-dev
-          - os: windows-latest
-            install_deps: ""
     runs-on: ${{ matrix.os }}
     steps:
     - name: Checkout repository
@@ -51,8 +44,19 @@ jobs:
         components: clippy
 
     - name: Install Dependencies (Linux)
-      if: matrix.os == 'ubuntu-latest'
-      run: ${{ matrix.install_deps }}
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake libclang-dev
+
+    - name: Install Dependencies (Windows)
+      if: runner.os == 'Windows'
+      run: choco install llvm cmake --yes
+      # LLVM provides libclang for bindgen, cmake for llama.cpp build
+
+    - name: Set LIBCLANG_PATH (Windows)
+      if: runner.os == 'Windows'
+      run: echo "LIBCLANG_PATH=C:\Program Files\LLVM\lib" >> $env:GITHUB_ENV
 
     - name: Cache Rust & C++ Build
       uses: actions/cache@v4

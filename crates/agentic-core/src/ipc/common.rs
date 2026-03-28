@@ -34,7 +34,6 @@ where
     stream.write_all(&header_buf).await?;
 
     // 2. Read and echo the payload in chunks using only a static stack buffer (Zero-Allocation)
-    let payload_len = header.payload_length;
     let mut chunk_buf = [0u8; 1024];
     let mut remaining = payload_len as usize;
 

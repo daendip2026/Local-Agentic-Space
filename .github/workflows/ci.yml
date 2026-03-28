@@ -47,3 +47,6 @@ jobs:
 
     - name: Build Check
       run: cargo build --workspace --verbose
+
+    - name: Run Tests
+      run: cargo test --workspace --verbose

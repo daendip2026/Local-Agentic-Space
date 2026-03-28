@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
@@ -65,7 +66,7 @@ fn main() {
         dst.join("build").join("common"),
     ];
 
-    let mut found_libs = Vec::new();
+    let mut found_libs = HashSet::new();
 
     for path in &search_paths {
         if path.exists() {
@@ -89,8 +90,10 @@ fn main() {
                     if let Some(name) = lib_name {
                         // Skip auxiliary libraries that are not core to llama.cpp
                         if !name.contains("test") && !name.contains("example") {
-                            println!("cargo:rustc-link-lib=static={}", name);
-                            found_libs.push(name.to_string());
+                            let name = name.to_string();
+                            if found_libs.insert(name.clone()) {
+                                println!("cargo:rustc-link-lib=static={}", name);
+                            }
                         }
                     }
                 }
@@ -99,10 +102,10 @@ fn main() {
     }
 
     // Fallback: Ensure core libraries are linked if discovery failed
-    if !found_libs.iter().any(|l| l == "llama") {
+    if !found_libs.contains("llama") {
         println!("cargo:rustc-link-lib=static=llama");
     }
-    if !found_libs.iter().any(|l| l == "ggml") {
+    if !found_libs.contains("ggml") {
         println!("cargo:rustc-link-lib=static=ggml");
     }
 

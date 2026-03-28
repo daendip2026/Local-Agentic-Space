@@ -32,6 +32,7 @@ fn main() {
     let mut config = cmake::Config::new(&llama_cpp_path);
 
     config
+        .profile("Release")
         .define("BUILD_SHARED_LIBS", "OFF")
         .define("LLAMA_BUILD_TESTS", "OFF")
         .define("LLAMA_BUILD_EXAMPLES", "OFF")
@@ -42,17 +43,25 @@ fn main() {
     let target = env::var("TARGET").unwrap();
     if target.contains("msvc") {
         config.cxxflag("/EHsc");
+        // ggml-cpu uses RegOpenKeyExA and RegQueryValueExA to query CPU flags on Windows
+        println!("cargo:rustc-link-lib=dylib=advapi32");
     }
 
     // Build the project
     let dst = config.build();
 
     // 4. Linkage Configuration
-    // llama.cpp might place libraries in various subdirectories depending on the version and OS
+    // MSVC generates multi-config outputs (e.g., lib/Release or build/Release)
+    // Since we forced the 'Release' profile above, we know exactly what subfolder CMake used.
+    let cmake_profile = "Release";
+
     let search_paths = vec![
         dst.join("lib"),
+        dst.join("lib").join(cmake_profile),
         dst.join("lib64"),
+        dst.join("lib64").join(cmake_profile),
         dst.join("build"),
+        dst.join("build").join(cmake_profile),
         dst.join("build").join("common"),
     ];
 

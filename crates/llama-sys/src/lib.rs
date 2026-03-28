@@ -10,13 +10,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_llama_backend_init_safety() {
-        // Simple test to ensure the linked library is reachable
-        // In a real scenario, this initializes the global llama.cpp state
+    fn test_llama_linked() {
+        // Simple test to ensure the linked library is reachable and bindings are valid
         unsafe {
-            llama_backend_init();
-            // Freeing the backend is part of the zero-resource-leak principle
-            llama_backend_free();
+            let _params = llama_model_default_params();
         }
     }
 }

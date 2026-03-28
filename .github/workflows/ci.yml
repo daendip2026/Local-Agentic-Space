@@ -10,8 +10,35 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build_and_check:
+  # Fast lint gate — no C++ build required, fails in ~30s on formatting issues
+  lint:
     runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt
+
+    - name: Format Check
+      run: cargo fmt --all -- --check
+
+  # Full build + lint + test — parallelized across OS matrix
+  build_and_test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            install_deps: |
+              sudo apt-get update
+              sudo apt-get install -y build-essential cmake libclang-dev
+          - os: windows-latest
+            install_deps: ""
+    runs-on: ${{ matrix.os }}
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -21,12 +48,11 @@ jobs:
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
       with:
-        components: clippy, rustfmt
+        components: clippy
 
-    - name: Install Dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential cmake libclang-dev
+    - name: Install Dependencies (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: ${{ matrix.install_deps }}
 
     - name: Cache Rust & C++ Build
       uses: actions/cache@v4
@@ -39,14 +65,8 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-cargo-
 
-    - name: Format Check
-      run: cargo fmt --all -- --check
-
     - name: Clippy Lints
       run: cargo clippy --workspace --all-targets --all-features -- -D warnings
-
-    - name: Build Check
-      run: cargo build --workspace --verbose
 
     - name: Run Tests
       run: cargo test --workspace --verbose

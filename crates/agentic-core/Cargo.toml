@@ -7,5 +7,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 llama-sys.workspace = true
 agentic-ipc.workspace = true
-
-tokio.workspace = true
+tokio = { workspace = true, features = ["full"] }
+tracing = "0.1.44"
+tracing-subscriber = "0.3.23"
+zerocopy = { workspace = true, features = ["derive"] }

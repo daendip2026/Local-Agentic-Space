@@ -1,13 +1,15 @@
 [workspace]
 members = [
-    "crates/llama-sys",
+    "crates/inference-core",
+    "crates/llama-backend",
+    "crates/agentic-core",
     "crates/agentic-ipc",
-    "crates/agentic-core"
 ]
 resolver = "2"
 
 [workspace.dependencies]
-llama-sys = { path = "crates/llama-sys" }
+llama-backend = { path = "crates/llama-backend" }
+agentic-core = { path = "crates/agentic-core" }
 agentic-ipc = { path = "crates/agentic-ipc" }
 
 cmake = "0.1"
